@@ -4,3 +4,65 @@ author: "Aaron Oustrich and Josh Bergstrom"
 format: html
 editor: visual
 ---
+
+```{r include=FALSE}
+library(tidyverse)
+library(knitr)
+
+weights <- read_table("data/BirthWeights.txt")
+
+# Convert Race and Gen cols to factors
+weights <- weights %>% 
+  mutate_at(vars(Race,Gen),factor)
+```
+
+### 1.
+
+The purpose of this analysis is to better understand diverse factors that are associated with the birth weight of a baby. This is a useful analysis since a baby's birth weight can tell us many things about its development and health. Doing this analysis could help doctors have a better idea about how much the baby will weigh, so they can give proper treatments throughout the pregnancy and as the baby is being born. It can also help doctors explain some of the associated risks with getting pregnant to a woman who is trying to get or already is pregnant based on the mother's age, race, and gender of the baby (once it is known).
+
+### 2.
+
+```{r}
+boxplot(weights$BirthWeight ~ weights$Race)
+
+kable(table(weights$Race), col.names = c("Race", "Count"))
+```
+
+There does not appear to be much variation between the races. Also, there are a few outliers, but nothing to be concerned about. The number of observations is not very balanced across the different races, which may not be an issue, but it's something to be aware of when fitting the model.
+
+```{r}
+boxplot(weights$BirthWeight ~ weights$Gen)
+
+kable(table(weights$Gen), col.names = c("Gender", "Count"))
+```
+
+The averages between female and male baby weights are surprisingly similar. Again, we have some outliers but still nothing to be concerned about. The counts between males and females is fairly balanced.
+
+```{r}
+continuous_predictors <- weights |>
+  select(-c(Race, Gen))
+
+plot(continuous_predictors)
+
+corrplot::corrplot(corr = cor(continuous_predictors), type = "upper")
+```
+
+If we look at the correlation matrix of the continuous variables, it's clear that a baby's gestational age is highly correlated with its birth weight. This makes intuitive sense because as a fetus develops over time, we expect it to get bigger. Also, there is relatively little correlation between a mother's age and the baby's birth weight. The two continuous predictor variables are not highly correlated with one another, so we should be okay when fitting the model. The scatter plot matrix supports our conclusions from the correlation matrix.
+
+### 3.
+
+```{r}
+plot(weights$BirthWeight)
+```
+
+Baby weights could be correlated for a number of reasons. For one, if some observations come from siblings, we'd expect their weights to be correlated since they have the same parents and similar DNA. Another example would be if observations come from a pregnancy of twins because one twin is usually bigger the other and the obvious fact that they are siblings.
+
+As shown in the plot above, there is no obvious correlation between observations since there is no clear pattern.
+
+### 4.
+
+Since the response is continuous, it makes sense to use a multivariable linear regression model to fit this data. This method would be useful because it would provide a model with which we can make predictions about new birth weights of babies. This helps us acheive the goals we proposed at the beginning of this assignment since it would give a doctor information about a baby's expected weight, and the health issues that could come from it. The doctor would be able to help the parent's prepare for their child's birth with this information.
+
+### 5.
+
+It wasn't applicable for this data set, but we are not sure how to quantify how much cross-observation correlation is present in the data.

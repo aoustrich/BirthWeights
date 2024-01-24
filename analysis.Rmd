@@ -1,0 +1,44 @@
+---
+title: "Birth Weights Code"
+author: "Aaron Oustrich, Josh Bergstrom"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+# link https://mheaton.byu.edu/docs/files/Stat469/IID/Stat469IIDClassRCode.html
+
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(ggplot2)
+
+weights <- read_table("data/BirthWeights.txt")
+
+# Convert Race and Gen cols to factors
+weights <- weights %>% 
+  mutate_at(vars(Race,Gen),factor)
+```
+
+# Exploratory Data Analysis
+
+### 1. Scatterplot of BirthWeight by Mage
+```{r}
+ggplot(data=weights, mapping=aes(x=BirthWeight,y=Mage)) + geom_point()
+```
+
+### 2. Side-by-side boxplots of BirthWeight for each category in Race
+```{r}
+ggplot(data=weights, mapping=aes(x=Race,y=BirthWeight)) + geom_boxplot()
+```
+
+### 3. A scatterplot of BirthWeight by Gage where the dots are colored according to Gen
+```{r}
+ggplot(data=weights, mapping=aes(x=BirthWeight,y=Gage,color=Gen)) + geom_point()
+```
+
+### 4. The correlation between BirthWeight and Mage
+```{r}
+
+```
+

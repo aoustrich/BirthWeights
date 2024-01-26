@@ -12,6 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
 library(ggplot2)
+library(GGally)
+library(car)
+library(MASS)
+library(lmtest)
 
 weights <- read_table("data/BirthWeights.txt")
 
@@ -39,6 +43,85 @@ ggplot(data=weights, mapping=aes(x=BirthWeight,y=Gage,color=Gen)) + geom_point()
 
 ### 4. The correlation between BirthWeight and Mage
 ```{r}
-
+cor(weights$BirthWeight,weights$Mage)
 ```
+
+### 5. A pairs plot of all the variables in the BirthWeight dataset
+```{r}
+new_weights <- weights %>% select(-BirthWeight,BirthWeight)
+ggpairs(new_weights, progress = FALSE)
+```
+
+# Fitting a Linear Model
+
+### 1. Without the use of lm() calculate β̂ and s2. Verify your answer using lm()
+(y−Xβ̂ )′(y−Xβ̂ )/(n−P−1)
+```{r}
+birth.lm <- lm(BirthWeight ~ ., data=weights)
+X <- model.matrix(BirthWeight ~ ., data=weights)
+y <- weights$BirthWeight
+
+beta_hat <- solve(t(X) %*% X) %*% t(X) %*% y
+s2 <- t(y - X %*% beta_hat) %*% (y - X %*% beta_hat) / ( nrow(weights) - ncol(X) )
+
+sigma(birth.lm)
+print(sqrt(s2))
+
+coef(birth.lm)
+print(beta_hat)
+```
+They are the same values.
+
+### 2. Without the use of lm() calculate the fitted values Xβ̂ Verify your calculations by pulling off the fitted values from an lm() object.
+
+```{r}
+# Round all the fitted values to 3 decimal places
+matrix_fitted_vals = round(X %*% beta_hat,3) 
+lm_fitted_vals = round(fitted(birth.lm),3)
+
+# Check if all the rounded fitted values are the same
+all(matrix_fitted_vals == lm_fitted_vals)
+```
+
+### 3. Without the use of lm() calculate the residuals y−Xβ̂ Verify your calculations by pulling off the residuals from an lm() object.
+```{r}
+# Round all the residuals to 3 decimal places
+matrix_residuals = round(y - X %*% beta_hat,3)
+lm_residuals = round(residuals(birth.lm),3)
+
+# Check if all the rounded residuals are the same
+all(matrix_residuals == lm_residuals)
+```
+
+### 4. Identify your model R2 from the summary() output.
+```{r}
+summary(birth.lm)
+```
+The model R2 is 0.6065
+
+# Checking Assumptions
+
+### 1. Construct added variable plots and assess if the linearity assumption is OK for this data.
+```{r}
+avPlots(birth.lm)
+```
+The linearity assumption is not OK for this data. The added variable plots show that the relationship between the response and the predictor is linear.
+
+### 2. Construct a histogram of the standardized residuals and run a KS-test to see if the normality assumption is OK for this data.
+```{r}
+standardized.residuals <- stdres(birth.lm)
+ggplot()+geom_histogram(mapping=aes(x=standardized.residuals))
+ks.test(standardized.residuals, "pnorm")
+```
+The Normality assumption is OK for this data. The p-value of the KS-test is 0.4884, so we confirm normality.
+
+### 3. Draw a scatterplot of the fitted values vs. standardized residuals and run a BP-test to see if the equal variance assumption is OK for this data.
+```{r}
+ggplot(mapping=aes(x=fitted(birth.lm),y=standardized.residuals)) + 
+  geom_point()
+bptest(birth.lm)
+```
+The equal variance assumption is OK for this data. The residuals v. fitted values plot is a nice cloud shape. The p-value of the BP-test is 0.338, so we confirm equal variance.
+
+# Predictions
 
